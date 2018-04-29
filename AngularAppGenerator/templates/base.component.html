@@ -1,0 +1,16 @@
+<div class="wrapper">
+<main class="main">
+  <div class="%selector-header">
+    <search-box (update)="searchValue = $event"></search-box>
+  </div>
+<%selector-list  
+    (selectedItem)="on%modelSelected($event)" [filterValue]="searchValue">
+    Loading list
+</%selector-list>
+</main>
+
+<%selector-detail %filenameDetail *ngIf="%keyField" class="aside aside-2" [%keyField]="%keyField"
+      (saved)="on%modelSaved($event)"
+      (cancelled)="on%modelCancelled()"
+      >
+</%selector-detail>

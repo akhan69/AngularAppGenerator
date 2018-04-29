@@ -1,0 +1,23 @@
+
+
+<div class="card">
+  <div class="card-header">
+    %model 
+    <button *ngIf="isEmbedded == false" type="button" (click)="onAddNew()" class="btn btn-info btn-circle ">
+      <i class="fa fa-plus"></i></button>
+  </div>
+
+<table class="table table-hover %selector">
+<tr *ngFor="let item of %filenames | searchFilter: filterValue | paginate: { id: '$filenamePager', itemsPerPage: 10, currentPage: currentPage }"
+   [class.selected]="item === selectedId">
+  <td (click)="onSelect(item.%keyField)"><i class="fa"
+       [ngClass]="isEmbedded ? 'fa-plus-square-o' : 'fa-pencil-square-o'"></i></td>
+  <td >{{item.%keyField}}</td>
+%listFields
+</tr>
+</table>
+<pagination-controls id="%filenamePager" (pageChange)="currentPage = $event"
+  autoHide="true">
+
+</pagination-controls>
+</div>

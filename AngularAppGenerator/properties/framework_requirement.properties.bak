@@ -1,0 +1,4 @@
+joinStatement=join framework a on t.framework_id \= a.framework_id join task b on t.task_id = b.task_id
+joinCols=name as frameworkName
+account_id=b.account_id
+webrequest=false

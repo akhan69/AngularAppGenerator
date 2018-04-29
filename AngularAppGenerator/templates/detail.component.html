@@ -1,0 +1,18 @@
+<div *ngIf="%filename" class="%selector rounded card box-shadow">
+  <h3 class="card-header">
+    Details ({{%filename.%keyField}})
+  </h3>
+  <div class="card-block">
+    <form #%filenameForm="ngForm" (ngSubmit)="onSaved()" class="form-horizontal">
+
+    %formFields
+
+      <div class="form-group row">
+        <span class="col-sm-1"> </span>
+        <button type="submit" class="btn btn-primary col-sm-2">Save</button>
+        <span class="col-sm-1"> </span>
+        <button (click)="onCancelled()" type="button" class="btn btn-secondary col-sm-2">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
