@@ -27,9 +27,9 @@ public class Generator {
 	
 	
 	/*String _cfgFile = "config.txt";
-	String _modelFolder = "d:\\wamp\\www\\evtest\\models";
-	String _serviceFolder = "d:\\wamp\\www\\evtest\\services";
-	String _restBase = "d:\\wamp\\www\\evtest\\rest"; */
+	String _modelFolder = "d:/wamp/www/evtest/models";
+	String _serviceFolder = "d:/wamp/www/evtest/services";
+	String _restBase = "d:/wamp/www/evtest/rest"; */
 	//String _include = "inc";
 	String _dbName = null;
 //	String _modelFolder = null;
@@ -69,8 +69,8 @@ public class Generator {
 		_appFolder=cfg.getProperty("appFolder");
 		_propertiesFolder=cfg.getProperty("propertiesFolder");
 		
-		new File(_appFolder + "\\models").mkdirs();
-        new File(_appFolder + "\\services").mkdirs();
+		new File(_appFolder + "/models").mkdirs();
+        new File(_appFolder + "/services").mkdirs();
 		
 				
 	}
@@ -195,11 +195,11 @@ public class Generator {
 	void createModel(String table, ArrayList<column> cols, Properties props) {
 		PrintWriter out=null;
 		try {
-		String template = new String(Files.readAllBytes(Paths.get("templates\\model.ts")));
+		String template = new String(Files.readAllBytes(Paths.get("templates/model.ts")));
 		
 		String model = getModelFilename(table);
 		
-		String filename = (_appFolder + "\\models\\" + model + ".ts");	
+		String filename = (_appFolder + "/models/" + model + ".ts");	
 		//build columns
 		StringBuilder ctext = new StringBuilder();
 		StringBuilder imports = new StringBuilder();
@@ -276,15 +276,15 @@ public class Generator {
 	void createPhpService (String table, ArrayList<column> cols, Properties props) {
 		PrintWriter out=null;
 		try {
-		String template = new String(Files.readAllBytes(Paths.get("templates\\service.php")));
-		String template_handler = new String(Files.readAllBytes(Paths.get("templates\\handler.php")));
-		String template_children = new String(Files.readAllBytes(Paths.get("templates\\getChildObject.php")));
-		String template_post_child = new String(Files.readAllBytes(Paths.get("templates\\postChildObject.php")));
-		String template_save_child = new String(Files.readAllBytes(Paths.get("templates\\saveChildObject.php")));
+		String template = new String(Files.readAllBytes(Paths.get("templates/service.php")));
+		String template_handler = new String(Files.readAllBytes(Paths.get("templates/handler.php")));
+		String template_children = new String(Files.readAllBytes(Paths.get("templates/getChildObject.php")));
+		String template_post_child = new String(Files.readAllBytes(Paths.get("templates/postChildObject.php")));
+		String template_save_child = new String(Files.readAllBytes(Paths.get("templates/saveChildObject.php")));
 		
 		String model = getModelFilename(table);		
-		String filename = (_restBase + "\\" + model + ".php.inc");
-		String filename_handler = (_restBase + "\\" + model + ".php");
+		String filename = (_restBase + "/" + model + ".php.inc");
+		String filename_handler = (_restBase + "/" + model + ".php");
 		
 		StringBuilder includeList = new StringBuilder();
 		
@@ -333,6 +333,9 @@ public class Generator {
 		String whereAcct = getWhereAcct(cols,account_col);
 		//System.console().printf("table: %s -- acct: %s", table, whereAcct);
 		
+		String sqlGetExt = getSqlGetExt(props);
+		
+		
 		String s = template.replace("%table", table)
 				.replace("%array", getArrayName(table))
 				.replace("%idcol", getIdColName(cols))
@@ -345,6 +348,7 @@ public class Generator {
 				.replace("%include", includeList.toString())
 				.replace("%orderby", orderby.toString())
 				.replace("%retSource",ret_source)
+				.replace("%sql_get_ext", sqlGetExt.toString())
 				.replace("%getChildren",getChildren.toString())
 				.replace("%postChildren",postChildren.toString())
 				.replace("%saveChildren",saveChildren.toString())
@@ -452,13 +456,30 @@ public class Generator {
 	    return rc.toString();
 	}
 	
+	String getSqlGetExt(Properties props) {
+	    //get the property keys
+	    StringBuilder sb = new StringBuilder();
+	    Enumeration<String> enums = (Enumeration<String>) props.propertyNames();
+	    while (enums.hasMoreElements()) {
+	      String key = enums.nextElement();
+	      if (key.startsWith("sql_get_ext")) {
+	          String v = key.split("\\.")[1];
+    	      String value = props.getProperty(key);
+    	      String s = String.format("       $this->sql_get_ext ['%s'] = '%s';\r\n",
+    	                      v,value);
+    	      
+    	      sb.append(s);
+	      }
+	    }
+	    return sb.toString();
+	}
 	
 	void createServicesModule () {
 		PrintWriter out=null;
 		try {
-			String template = new String(Files.readAllBytes(Paths.get("templates\\services.module.ts")));
+			String template = new String(Files.readAllBytes(Paths.get("templates/services.module.ts")));
 			
-			String filename = (_appFolder + "\\services\\services.module.ts");	
+			String filename = (_appFolder + "/services/services.module.ts");	
 			
 			StringBuilder imports = new StringBuilder();
 			StringBuilder declarations = new StringBuilder();
@@ -487,11 +508,11 @@ public class Generator {
 	void createService(String table, ArrayList<column> cols) {
 		PrintWriter out=null;
 		try {
-		String template = new String(Files.readAllBytes(Paths.get("templates\\service.ts")));
+		String template = new String(Files.readAllBytes(Paths.get("templates/service.ts")));
 		
 		String service = getModelFilename(table);
 		
-		String filename = (_appFolder + "\\services\\" + service + ".service.ts");	
+		String filename = (_appFolder + "/services/" + service + ".service.ts");	
 		
 		String s = template.replace("%model", getModelName(table))
 				.replace("%array", getArrayName(table))
@@ -526,15 +547,15 @@ public class Generator {
 	    for (String componentType: compList) {
        	            
             // Create the component folder if it doesn't exist
-            new File(_appFolder + "\\" + component + "s").mkdirs();
+            new File(_appFolder + "/" + component + "s").mkdirs();
     	    String[] comp = createBaseComponent(componentType, table, cols, props);
     	    moduleList.put(comp[0],comp[1]);
 	    }
 	    //Create Module file & app.module.add
 	    PrintWriter out=null;
 	    try {
-	        String template = new String(Files.readAllBytes(Paths.get("templates\\module.component.ts")));
-	        String filename = (_appFolder + "\\" + component + "s\\" + component + "s.module.ts");
+	        String template = new String(Files.readAllBytes(Paths.get("templates/module.component.ts")));
+	        String filename = (_appFolder + "/" + component + "s/" + component + "s.module.ts");
 	        
 	        StringBuilder imports = new StringBuilder();
 	        StringBuilder declarations = new StringBuilder();
@@ -593,14 +614,14 @@ public class Generator {
 	    for (String ft : fileTypes) { 
             PrintWriter out=null;
             try {
-                String template = new String(Files.readAllBytes(Paths.get("templates\\" + componentType + ".component." + ft)));
+                String template = new String(Files.readAllBytes(Paths.get("templates/" + componentType + ".component." + ft)));
                 
                 //String component = getModelFilename(table);
              
                 // Create the component folder if it doesn't exist
-                new File(_appFolder + "\\" + component + "s").mkdirs();
+                new File(_appFolder + "/" + component + "s").mkdirs();
                 
-                String filename = (_appFolder + "\\" + component + "s\\" + component + cf + ".component." + ft);    
+                String filename = (_appFolder + "/" + component + "s/" + component + cf + ".component." + ft);    
 
                 
                 String s = template.replace("%model", model)
@@ -650,10 +671,10 @@ public class Generator {
 	    }
         StringBuilder formFields = new StringBuilder();
         try {
-            String fTemplate = new String(Files.readAllBytes(Paths.get("templates\\detail.column.html")));
-            String dTemplate = new String(Files.readAllBytes(Paths.get("templates\\detail.column.date.html")));
-            String nTemplate = new String(Files.readAllBytes(Paths.get("templates\\detail.column.number.html")));
-            String bTemplate = new String(Files.readAllBytes(Paths.get("templates\\detail.column.boolean.html")));
+            String fTemplate = new String(Files.readAllBytes(Paths.get("templates/detail.column.html")));
+            String dTemplate = new String(Files.readAllBytes(Paths.get("templates/detail.column.date.html")));
+            String nTemplate = new String(Files.readAllBytes(Paths.get("templates/detail.column.number.html")));
+            String bTemplate = new String(Files.readAllBytes(Paths.get("templates/detail.column.boolean.html")));
             
             String[] l = colList.split(",");
             for (String c : l) {
@@ -683,8 +704,8 @@ public class Generator {
 	void createAppModuleAdd() {
 	    PrintWriter out=null;
 	    try {
-            String appTemplate = new String(Files.readAllBytes(Paths.get("templates\\app.module.add.ts")));
-            String appModuleFilename = (_appFolder + "\\app.module.add.ts");
+            String appTemplate = new String(Files.readAllBytes(Paths.get("templates/app.module.add.ts")));
+            String appModuleFilename = (_appFolder + "/app.module.add.ts");
             
             StringBuilder appImports = new StringBuilder();
             StringBuilder appModules = new StringBuilder();
@@ -728,10 +749,10 @@ public class Generator {
         }
         StringBuilder listFields = new StringBuilder();
         try {
-            String fTemplate = new String(Files.readAllBytes(Paths.get("templates\\list.column.html")));
-            String dTemplate = new String(Files.readAllBytes(Paths.get("templates\\list.column.date.html")));
-            String nTemplate = new String(Files.readAllBytes(Paths.get("templates\\list.column.number.html")));
-            String bTemplate = new String(Files.readAllBytes(Paths.get("templates\\list.column.boolean.html")));        
+            String fTemplate = new String(Files.readAllBytes(Paths.get("templates/list.column.html")));
+            String dTemplate = new String(Files.readAllBytes(Paths.get("templates/list.column.date.html")));
+            String nTemplate = new String(Files.readAllBytes(Paths.get("templates/list.column.number.html")));
+            String bTemplate = new String(Files.readAllBytes(Paths.get("templates/list.column.boolean.html")));        
 
             String[] l = colList.split(",");
             for (String c : l) {

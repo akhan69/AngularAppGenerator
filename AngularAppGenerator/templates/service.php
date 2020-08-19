@@ -18,12 +18,14 @@ class %model {
 	var $input;
 	var $sql_conn;
 	var $key_field;
+	var $sql_get_ext;
 	
 	var $fieldToCol = array (
 %mapFieldToCol
 	);
-	function %model($sql_conn) {
+	function __construct($sql_conn) {
 		$this->sql_conn = $sql_conn;
+		$this->account_id =  $_SERVER['HTTP_ACCOUNTID'];
 		
 		//$this->account_id = 1;
 		$this->sqlString ['select'] = "select %selectfields from %table t %joinStatement where 1=1 %whereacct ";
@@ -32,18 +34,43 @@ class %model {
 		$this->sqlString ['update'] = "update %table set %s where %idcol = %d ";
 		$this->sqlString ['delete'] = "delete from %table where %idcol = %d ";
 		$this->key_field = "%idfield";
+		$this->sql_get_ext = [];
+%sql_get_ext
 	}
 	
 	function setup() {
 		
 		// get the HTTP method, path and body of the request
 		$this->method = $_SERVER ['REQUEST_METHOD'];
-		$this->account_id =  $_SERVER['HTTP_ACCOUNTID'];
 		$this->key = "";
+		$this->filter_field = "";
+		
 		if (array_key_exists ( 'PATH_INFO', $_SERVER )) {
-			$this->request = explode ( '/', trim ( $_SERVER ['PATH_INFO'], '/' ) );
-			$this->key = array_shift ( $this->request );
+		    $this->request = explode ( '/', trim ( $_SERVER ['PATH_INFO'], '/' ) );
+		    $this->key = array_shift ( $this->request );
+
+		    if (key_exists($this->key,$this->sql_get_ext)) {
+		        $this->key = $this->sql_get_ext[$this->key];
+		        $this->filter_field = "";
+		    } else if (is_numeric($this->key)) {
+		        $this->filter_field = '%idcol';
+		    } else {
+		        $kv = explode('=', $this->key);
+		        // is it a valid field
+		        if (array_key_exists($kv[0],$this->fieldToCol)) {
+		            $this->filter_field = $this->fieldToCol[$kv[0]];
+		            if (is_numeric($kv[1])) {
+		                $this->key = $kv[1];
+		            } else {
+		                $this->key = "'" . $kv[1] . "'";
+		            }
+		        } else {
+		            // Invalid key
+		            $this->key = "";
+		        }
+		    }
 		}
+
 		
 		$rawdata =file_get_contents ( 'php://input' );
 		
@@ -57,7 +84,7 @@ class %model {
 		// create SQL based on HTTP method
 		switch ($this->method) {
 			case 'GET' :
-				return $this->get($this->key,'%idcol');				
+				return $this->get($this->key,$this->filter_field);				
 				break;
 			case 'PUT' :
 				return $this->put($this->input);
@@ -73,8 +100,8 @@ class %model {
 	function get($key, $col) {
 		//$baseSql = sprintf($this->sqlString['select'], $this->account_id );
 		%basesql
-		
-		$sql = $baseSql  . ($key ? " and t.$col=$key" : '') . $this->sqlString['selectOrder'];
+		$addlWhere = $key && $col ? " and t.$col=$key" : ($key ? $key : "");
+		$sql = $baseSql  . $addlWhere . $this->sqlString['selectOrder'];
 		
 		$result = $this->sql_conn->query ( $sql) or die($this->sql_conn->error.__LINE__);
 		$arr = array();
@@ -86,7 +113,11 @@ class %model {
 		}
 		// If we are pulling the primary key object then return the single item not an array
 		if ($key != '' && $col == '%idcol' && count($arr) > 0) {
-			return $arr[0];
+		    if (count($arr) > 0) {
+			   return $arr[0];
+		    } else {
+		       return (Object) null; 
+		    }
 		}
 		return $arr;
 		
