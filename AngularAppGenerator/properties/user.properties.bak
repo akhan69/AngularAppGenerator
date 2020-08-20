@@ -1,2 +1,0 @@
-joinStatement=join user_account a on t.user_id \= a.user_id
-account_id=a.account_id
